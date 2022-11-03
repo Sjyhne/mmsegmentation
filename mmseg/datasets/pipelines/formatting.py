@@ -204,12 +204,18 @@ class DefaultFormatBundle(object):
                 img = np.expand_dims(img, -1)
             img = np.ascontiguousarray(img.transpose(2, 0, 1))
             results['img'] = DC(to_tensor(img), stack=True)
+        if 'gen' in results:
+            gen = results['gen']
+            if len(gen.shape) < 3:
+                gen = np.expand_dims(gen, -1)
+            gen = np.ascontiguousarray(gen.transpose(2, 0, 1))
+            results["gen"] = DC(to_tensor(gen), stack=True)
         if 'gt_semantic_seg' in results:
             # convert to long
             results['gt_semantic_seg'] = DC(
-                to_tensor(results['gt_semantic_seg'][None,
-                                                     ...].astype(np.int64)),
+                to_tensor(results['gt_semantic_seg'][None, ...].astype(np.int64)),
                 stack=True)
+
         return results
 
     def __repr__(self):
