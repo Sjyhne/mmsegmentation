@@ -91,7 +91,9 @@ class CustomDataset(Dataset):
                  classes=None,
                  palette=None,
                  gt_seg_map_loader_cfg=None,
-                 file_client_args=dict(backend='disk')):
+                 file_client_args=dict(backend='disk'),
+                 gen_suffix=None,
+                 gen_dir=None):
         self.pipeline = Compose(pipeline)
         self.img_dir = img_dir
         self.img_suffix = img_suffix
@@ -112,6 +114,9 @@ class CustomDataset(Dataset):
         self.file_client_args = file_client_args
         self.file_client = mmcv.FileClient.infer_client(self.file_client_args)
 
+        self.gen_suffix = gen_suffix
+        self.gen_dir = gen_dir
+
         if test_mode:
             assert self.CLASSES is not None, \
                 '`cls.CLASSES` or `classes` should be specified when testing'
@@ -124,11 +129,16 @@ class CustomDataset(Dataset):
                 self.ann_dir = osp.join(self.data_root, self.ann_dir)
             if not (self.split is None or osp.isabs(self.split)):
                 self.split = osp.join(self.data_root, self.split)
+            if self.gen_dir != None:
+                if not osp.isabs(self.gen_dir):
+                    self.gen_dir = osp.join(self.data_root, self.gen_dir)
 
         # load annotations
         self.img_infos = self.load_annotations(self.img_dir, self.img_suffix,
                                                self.ann_dir,
                                                self.seg_map_suffix, self.split)
+
+        self.gen_infos = self.load_annotations(self.gen_dir, self.gen_suffix, self.ann_dir, self.seg_map_suffix, self.split)
 
     def __len__(self):
         """Total number of samples of data."""
@@ -195,6 +205,7 @@ class CustomDataset(Dataset):
         results['seg_fields'] = []
         results['img_prefix'] = self.img_dir
         results['seg_prefix'] = self.ann_dir
+        results['gen_prefix'] = self.gen_dir
         if self.custom_classes:
             results['label_map'] = self.label_map
 
@@ -226,8 +237,9 @@ class CustomDataset(Dataset):
         """
 
         img_info = self.img_infos[idx]
+        gen_info = self.gen_infos[idx]
         ann_info = self.get_ann_info(idx)
-        results = dict(img_info=img_info, ann_info=ann_info)
+        results = dict(img_info=img_info, ann_info=ann_info, gen_info=gen_info)
         self.pre_pipeline(results)
         return self.pipeline(results)
 
@@ -243,7 +255,8 @@ class CustomDataset(Dataset):
         """
 
         img_info = self.img_infos[idx]
-        results = dict(img_info=img_info)
+        gen_info = self.gen_infos[idx]
+        results = dict(img_info=img_info, gen_info=gen_info)
         self.pre_pipeline(results)
         return self.pipeline(results)
 

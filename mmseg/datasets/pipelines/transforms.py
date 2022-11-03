@@ -3,7 +3,9 @@ import copy
 
 import mmcv
 import numpy as np
+import torch
 from mmcv.utils import deprecated_api_warning, is_tuple_of
+from mmcv.parallel import DataContainer as DC
 from numpy import random
 
 from ..builder import PIPELINES
@@ -65,6 +67,42 @@ class ResizeToMultiple(object):
                      f'interpolation={self.interpolation})')
         return repr_str
 
+
+@PIPELINES.register_module()
+class CombineImageGen(object):
+    """Resize images & seg to multiple of divisor.
+
+    Args:
+        size_divisor (int): images and gt seg maps need to resize to multiple
+            of size_divisor. Default: 32.
+        interpolation (str, optional): The interpolation mode of image resize.
+            Default: None
+    """
+
+    def __init__(self):
+        pass
+
+    def __call__(self, results):
+        """
+        Call function to combine the generated image and the original image
+
+        I do this because I am not sure how to pass multiple inputs to the networks using mmseg
+        """
+
+        img = results["img"]
+        gen = results["gen"]
+
+        img = DC(torch.cat([img.data, gen.data], dim=0))
+
+        results["img"] = img
+
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += (f'(size_divisor={self.size_divisor}, '
+                     f'interpolation={self.interpolation})')
+        return repr_str
 
 @PIPELINES.register_module()
 class Resize(object):
@@ -365,6 +403,9 @@ class RandomFlip(object):
             results['img'] = mmcv.imflip(
                 results['img'], direction=results['flip_direction'])
 
+            if "gen" in results.keys():
+                results["gen"] = mmcv.imflip(results["gen"], direction=results["flip_direction"])
+
             # flip segs
             for key in results.get('seg_fields', []):
                 # use copy() to make numpy stride positive
@@ -410,10 +451,13 @@ class Pad(object):
         if self.size is not None:
             padded_img = mmcv.impad(
                 results['img'], shape=self.size, pad_val=self.pad_val)
+            if "gen" in results.keys():
+                padded_gen = mmcv.impad(
+                    results["gen"], shape=self.size, pad_val=self.pad_val)
         elif self.size_divisor is not None:
-            padded_img = mmcv.impad_to_multiple(
-                results['img'], self.size_divisor, pad_val=self.pad_val)
+            padded_img = mmcv.impad_to_multiple(results['img'], self.size_divisor, pad_val=self.pad_val)
         results['img'] = padded_img
+        results["gen"] = padded_gen
         results['pad_shape'] = padded_img.shape
         results['pad_fixed_size'] = self.size
         results['pad_size_divisor'] = self.size_divisor
@@ -478,6 +522,8 @@ class Normalize(object):
 
         results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,
                                           self.to_rgb)
+        if "gen" in results.keys():
+            results["gen"] = mmcv.imnormalize(results["gen"], self.mean, self.std, self.to_rgb)
         results['img_norm_cfg'] = dict(
             mean=self.mean, std=self.std, to_rgb=self.to_rgb)
         return results
@@ -625,6 +671,7 @@ class RandomCrop(object):
         """
 
         img = results['img']
+        gen = results["gen"]
         crop_bbox = self.get_crop_bbox(img)
         if self.cat_max_ratio < 1.:
             # Repeat 10 times
@@ -639,9 +686,13 @@ class RandomCrop(object):
 
         # crop the image
         img = self.crop(img, crop_bbox)
+        gen = self.crop(gen, crop_bbox)
         img_shape = img.shape
+        gen_shape = gen.shape
         results['img'] = img
+        results["gen"] = gen
         results['img_shape'] = img_shape
+        results["gen_shape"] = gen_shape
 
         # crop semantic seg
         for key in results.get('seg_fields', []):
