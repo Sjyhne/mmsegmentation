@@ -1,6 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .builder import (OPTIMIZER_BUILDERS, build_optimizer,
-                      build_optimizer_constructor)
+from .builder import (OPTIMIZER_BUILDERS, ITERACTION_LAYERS, build_optimizer,
+                      build_optimizer_constructor, build_interaction_layer)
+from .interaction_layer import (Aggregation_distribution, ChannelExchange,
+                                SpatialExchange)
 from .evaluation import *  # noqa: F401, F403
 from .hook import *  # noqa: F401, F403
 from .optimizers import *  # noqa: F401, F403
@@ -8,5 +10,6 @@ from .seg import *  # noqa: F401, F403
 from .utils import *  # noqa: F401, F403
 
 __all__ = [
-    'OPTIMIZER_BUILDERS', 'build_optimizer', 'build_optimizer_constructor'
+    'OPTIMIZER_BUILDERS', 'ITERACTION_LAYERS', 'build_optimizer', 'build_optimizer_constructor', 'build_interaction_layer', 'Aggregation_distribution', 'ChannelExchange',
+    'SpatialExchange'
 ]

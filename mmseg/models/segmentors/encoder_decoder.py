@@ -75,7 +75,7 @@ class EncoderDecoder(BaseSegmentor):
         out = self._decode_head_forward_test(x, img_metas)
         out = resize(
             input=out,
-            size=img.shape[2:],
+            size=img[0].shape[1:],
             mode='bilinear',
             align_corners=self.align_corners)
         return out

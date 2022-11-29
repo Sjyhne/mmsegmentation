@@ -8,6 +8,13 @@ OPTIMIZER_BUILDERS = Registry(
     'optimizer builder', parent=MMCV_OPTIMIZER_BUILDERS)
 
 
+ITERACTION_LAYERS = Registry('interaction layer')
+
+def build_interaction_layer(cfg, default_args=None):
+    """Builder for Interaction layer."""
+    return build_from_cfg(cfg, ITERACTION_LAYERS, default_args)
+
+
 def build_optimizer_constructor(cfg):
     constructor_type = cfg.get('type')
     if constructor_type in OPTIMIZER_BUILDERS:

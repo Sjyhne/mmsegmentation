@@ -6,6 +6,7 @@ from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
 from mmseg.ops import resize
 from ..builder import HEADS
 from .aspp_head import ASPPHead, ASPPModule
+from .downscale_upscale import DownscaleUpscale
 
 
 class DepthwiseSeparableASPPModule(ASPPModule):
@@ -43,6 +44,9 @@ class DepthwiseSeparableASPPHead(ASPPHead):
     def __init__(self, c1_in_channels, c1_channels, **kwargs):
         super(DepthwiseSeparableASPPHead, self).__init__(**kwargs)
         assert c1_in_channels >= 0
+        self.upscale1 = torch.nn.ConvTranspose2d(2, 2, 2, 2)
+        self.upscale2 = torch.nn.ConvTranspose2d(2, 2, 2, 2)
+        #self.du = DownscaleUpscale()
         self.aspp_modules = DepthwiseSeparableASPPModule(
             dilations=self.dilations,
             in_channels=self.in_channels,
@@ -99,4 +103,8 @@ class DepthwiseSeparableASPPHead(ASPPHead):
             output = torch.cat([output, c1_output], dim=1)
         output = self.sep_bottleneck(output)
         output = self.cls_seg(output)
+        # Added to make the upscale of the 128x128 -> 512x512 gradients learnable
+        output = self.upscale1(output)
+        output = self.upscale2(output)
+        #output = self.du(output)
         return output

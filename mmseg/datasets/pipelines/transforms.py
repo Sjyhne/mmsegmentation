@@ -457,7 +457,8 @@ class Pad(object):
         elif self.size_divisor is not None:
             padded_img = mmcv.impad_to_multiple(results['img'], self.size_divisor, pad_val=self.pad_val)
         results['img'] = padded_img
-        results["gen"] = padded_gen
+        if "gen" in results:
+            results["gen"] = padded_gen
         results['pad_shape'] = padded_img.shape
         results['pad_fixed_size'] = self.size
         results['pad_size_divisor'] = self.size_divisor
@@ -671,7 +672,8 @@ class RandomCrop(object):
         """
 
         img = results['img']
-        gen = results["gen"]
+        if "gen" in results:
+            gen = results["gen"]
         crop_bbox = self.get_crop_bbox(img)
         if self.cat_max_ratio < 1.:
             # Repeat 10 times
@@ -686,13 +688,16 @@ class RandomCrop(object):
 
         # crop the image
         img = self.crop(img, crop_bbox)
-        gen = self.crop(gen, crop_bbox)
+
+        if "gen" in results:
+            gen = self.crop(gen, crop_bbox)
+            gen_shape = gen.shape
+            results["gen_shape"] = gen_shape
+            results["gen"] = gen
+
         img_shape = img.shape
-        gen_shape = gen.shape
         results['img'] = img
-        results["gen"] = gen
         results['img_shape'] = img_shape
-        results["gen_shape"] = gen_shape
 
         # crop semantic seg
         for key in results.get('seg_fields', []):

@@ -19,13 +19,24 @@ from .swin import SwinTransformer
 from .timm_backbone import TIMMBackbone
 from .twins import PCPVT, SVT
 from .unet import UNet
-from .vit import VisionTransformer
+from .vit import VisionTransformer, SiameseVisionTransformer, SiameseVisionTransformerV2
 from .dual_resnet import DualResNet
+from .resnet import StackedResNet
+from .triple_resnet import TripleResNet
+from .encoder_transformer_v3 import EncoderTransformerV3
+from .interaction_resnet import IA_ResNetV1c
+from .interaction_resnest import IA_ResNeSt
+from .siamunet_diff import SiamUnet_diff
+from .snunet import SNUNet_ECAM
+from .dual_resnet import SiamResNet
+
 
 __all__ = [
     'ResNet', 'ResNetV1c', 'ResNetV1d', 'ResNeXt', 'HRNet', 'FastSCNN',
     'ResNeSt', 'MobileNetV2', 'UNet', 'CGNet', 'MobileNetV3',
     'VisionTransformer', 'SwinTransformer', 'MixVisionTransformer',
     'BiSeNetV1', 'BiSeNetV2', 'ICNet', 'TIMMBackbone', 'ERFNet', 'PCPVT',
-    'SVT', 'STDCNet', 'STDCContextPathNet', 'BEiT', 'MAE', 'DualResNet'
+    'SVT', 'STDCNet', 'STDCContextPathNet', 'BEiT', 'MAE', 'DualResNet', 'StackedResNet',
+    'TripleResNet', 'EncoderTransformerV3', 'IA_ResNetV1c', 'IA_ResNeSt', 'SiamUnet_diff', 'SNUNet_ECAM',
+    'SiamResNet', 'SiameseVisionTransformer', 'SiameseVisionTransformerV2'
 ]

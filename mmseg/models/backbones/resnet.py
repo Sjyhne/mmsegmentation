@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
+import torch
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 from mmcv.cnn import build_conv_layer, build_norm_layer, build_plugin_layer
@@ -658,6 +659,10 @@ class ResNet(BaseModule):
 
     def forward(self, x):
         """Forward function."""
+
+        if type(x) == list:
+            x = torch.cat([torch.unsqueeze(xi, dim=0) for xi in x], dim=0)
+
         if self.deep_stem:
             x = self.stem(x)
         else:
@@ -698,6 +703,21 @@ class ResNetV1c(ResNet):
     def __init__(self, **kwargs):
         super(ResNetV1c, self).__init__(
             deep_stem=True, avg_down=False, **kwargs)
+
+@BACKBONES.register_module()
+class StackedResNet(ResNet):
+    """ResNetV1c variant described in [1]_.
+
+    Compared with default ResNet(ResNetV1b), ResNetV1c replaces the 7x7 conv in
+    the input stem with three 3x3 convs. For more details please refer to `Bag
+    of Tricks for Image Classification with Convolutional Neural Networks
+    <https://arxiv.org/abs/1812.01187>`_.
+    """
+
+    def __init__(self, **kwargs):
+        super(StackedResNet, self).__init__(
+            deep_stem=True, avg_down=False, in_channels=6, **kwargs)
+
 
 
 @BACKBONES.register_module()

@@ -14,7 +14,7 @@ class BuildingDataset(CustomDataset):
         super(BuildingDataset, self).__init__(
             img_suffix='.tif',
             seg_map_suffix='.tif',
-            reduce_zero_label=True,
+            reduce_zero_label=False,
             **kwargs)
 
 @DATASETS.register_module()
@@ -29,5 +29,5 @@ class GenBuildingDataset(CustomDataset):
             img_suffix='.tif',
             gen_suffix='.png',
             seg_map_suffix='.tif',
-            reduce_zero_label=True,
+            reduce_zero_label=False,
             **kwargs)

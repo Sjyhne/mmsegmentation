@@ -72,7 +72,11 @@ class UPerHead(BaseDecodeHead):
             padding=1,
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
-            act_cfg=self.act_cfg)
+            act_cfg=self.act_cfg
+        )
+        self.up1 = torch.nn.ConvTranspose2d(2, 2, 2, 2)
+        self.up2 = torch.nn.ConvTranspose2d(2, 2, 2, 2)
+        self.upsamples = torch.nn.ModuleList()
 
     def psp_forward(self, inputs):
         """Forward function of PSP module."""
@@ -137,4 +141,6 @@ class UPerHead(BaseDecodeHead):
         """Forward function."""
         output = self._forward_feature(inputs)
         output = self.cls_seg(output)
+        output = self.up1(output)
+        output = self.up2(output)
         return output

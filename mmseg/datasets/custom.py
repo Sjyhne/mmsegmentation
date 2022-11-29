@@ -180,7 +180,12 @@ class CustomDataset(Dataset):
                     recursive=True):
                 img_info = dict(filename=img)
                 if ann_dir is not None:
-                    seg_map = img.replace(img_suffix, seg_map_suffix)
+                    if img_suffix == None:
+                        img_suffix = ".tif"
+                    if img_suffix != seg_map_suffix:
+                        seg_map = img.replace(img_suffix, seg_map_suffix)
+                    else:
+                        seg_map = img
                     img_info['ann'] = dict(seg_map=seg_map)
                 img_infos.append(img_info)
             img_infos = sorted(img_infos, key=lambda x: x['filename'])
@@ -237,9 +242,17 @@ class CustomDataset(Dataset):
         """
 
         img_info = self.img_infos[idx]
-        gen_info = self.gen_infos[idx]
+
+        try:
+            gen_info = self.gen_infos[idx]
+        except:
+            gen_info = None
         ann_info = self.get_ann_info(idx)
-        results = dict(img_info=img_info, ann_info=ann_info, gen_info=gen_info)
+        if gen_info == None:
+            results = dict(img_info=img_info, ann_info=ann_info)
+        else:
+            results = dict(img_info=img_info, ann_info=ann_info, gen_info=gen_info)
+
         self.pre_pipeline(results)
         return self.pipeline(results)
 

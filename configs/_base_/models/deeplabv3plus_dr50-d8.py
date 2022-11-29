@@ -2,7 +2,7 @@
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
     type='EncoderDecoder',
-    #pretrained='open-mmlab://resnet50_v1c',
+    pretrained='open-mmlab://resnet50_v1c',
     backbone=dict(
         type='DualResNet',
         depth=50,
@@ -23,7 +23,7 @@ model = dict(
         c1_in_channels=512,
         c1_channels=48,
         dropout_ratio=0.1,
-        num_classes=19,
+        num_classes=2,
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
@@ -36,7 +36,7 @@ model = dict(
         num_convs=1,
         concat_input=False,
         dropout_ratio=0.1,
-        num_classes=19,
+        num_classes=2,
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(

@@ -1,7 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+import pathlib
 import tempfile
 import warnings
+
+from PIL import Image
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
 
 import mmcv
 import numpy as np
@@ -30,6 +35,28 @@ def np2tmp(array, temp_file_name=None, tmpdir=None):
     np.save(temp_file_name, array)
     return temp_file_name
 
+
+class SegmentationModelInputWrapper(torch.nn.Module):
+    def __init__(self, model):
+        super(SegmentationModelInputWrapper, self).__init__()
+        self.model = model
+
+    def forward(self, data):
+        out = self.model.module.forward_dummy(data.cuda())
+        print("out:", out.shape)
+        return out
+
+
+class SemanticSegmentationTarget:
+    def __init__(self, category, filename):
+        self.mask = Image.open(pathlib.Path("..", "data", "MapBuildingSegmentationData", "test", "masks", filename.split(".")[0] + ".tif"))
+        self.category = category
+        self.mask = np.asarray(self.mask)
+        if torch.cuda.is_available():
+            self.mask = torch.from_numpy(self.mask).cuda()
+
+    def __call__(self, model_output):
+        return (model_output[self.category, :, :] * self.mask).sum()
 
 def single_gpu_test(model,
                     data_loader,
@@ -76,6 +103,11 @@ def single_gpu_test(model,
         'exclusive, only one of them could be true .'
 
     model.eval()
+
+    model = SegmentationModelInputWrapper(model)
+
+    print(model.model.module.backbone.res)
+
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
@@ -86,16 +118,42 @@ def single_gpu_test(model,
     # we use batch_sampler to get correct data idx
     loader_indices = data_loader.batch_sampler
 
+    target_layers = [model.model.module.backbone.res.layer4]
+
     for batch_indices, data in zip(loader_indices, data_loader):
+
         with torch.no_grad():
-            result = model(return_loss=False, **data)
+            img_tensor = data['img'][0]
+            img_tensor = img_tensor.data
+            # Shape: (b, channels, h, w) = (1, 6, 512, 512)
+            img_tensor = img_tensor[0][0].unsqueeze(0)
+            print("img_tensor:", img_tensor.shape)
+            result = model(img_tensor)
+            print("result:", result[0].shape)
 
         if show or out_dir:
             img_tensor = data['img'][0]
+            img_tensor = img_tensor.data
+            # Shape: (b, channels, h, w) = (1, 6, 512, 512)
+            img_tensor = img_tensor[0][0].unsqueeze(0)
             img_metas = data['img_metas'][0].data[0]
-            imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
+            # Since it is 6 channels, only insert the original iamge
+            imgs = tensor2imgs(img_tensor[:, :3], **img_metas[0]['img_norm_cfg'])
             assert len(imgs) == len(img_metas)
 
+            filename = data["img_metas"][0].data[0][0]["ori_filename"]
+            print("filename:", filename)
+            targets = [SemanticSegmentationTarget(1, filename)]
+            with GradCAM(model=model,
+                         target_layers=target_layers,
+                         use_cuda=False) as cam:
+                grayscale_cam = cam(input_tensor=img_tensor,
+                                    targets=targets)[0, :]
+                print(imgs[0].shape)
+                cam_image = show_cam_on_image(imgs[0] / 255.0, grayscale_cam, use_rgb=True)
+            cam_image = Image.fromarray(cam_image)
+            cam_image.save("cam_image_ccs.png")
+            exit()
             for img, img_meta in zip(imgs, img_metas):
                 h, w, _ = img_meta['img_shape']
                 img_show = img[:h, :w, :]
@@ -108,7 +166,7 @@ def single_gpu_test(model,
                 else:
                     out_file = None
 
-                model.module.show_result(
+                model.model.module.show_result(
                     img_show,
                     result,
                     palette=dataset.PALETTE,

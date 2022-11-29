@@ -192,13 +192,19 @@ class PatchEmbed(BaseModule):
                 - out_size (tuple[int]): Spatial shape of x, arrange as
                     (out_h, out_w).
         """
-
+        # x.shape: 8, 3, 512, 512
         if self.adap_padding:
             x = self.adap_padding(x)
 
         x = self.projection(x)
+        # x.shape: 8, 768, 32, 32
+
         out_size = (x.shape[2], x.shape[3])
+        # out_size = 32, 32
+
         x = x.flatten(2).transpose(1, 2)
+        # x.shape: 8, 1024, 768
+
         if self.norm is not None:
             x = self.norm(x)
         return x, out_size
