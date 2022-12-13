@@ -2,9 +2,9 @@
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
     type='EncoderDecoder',
-    pretrained='pretrain/jx_vit_base_p16_224-80ecf9dd.pth',
+    pretrained='pretrain/contrastive_pretrained_vit.pth',
     backbone=dict(
-        type='SiameseVisionTransformerV2',
+        type='SiameseVisionTransformer',
         img_size=(512, 512),
         patch_size=16,
         in_channels=3,

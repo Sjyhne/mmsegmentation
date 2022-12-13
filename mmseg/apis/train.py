@@ -100,6 +100,9 @@ def train_segmentor(model,
     train_loader_cfg = {**loader_cfg, **cfg.data.get('train_dataloader', {})}
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
 
+    #for param in model.backbone.layers.parameters():
+    #    param.requires_grad = False
+
     # put model on devices
     if distributed:
         find_unused_parameters = cfg.get('find_unused_parameters', False)
@@ -119,6 +122,7 @@ def train_segmentor(model,
 
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
+
 
     if cfg.get('runner') is None:
         cfg.runner = {'type': 'IterBasedRunner', 'max_iters': cfg.total_iters}

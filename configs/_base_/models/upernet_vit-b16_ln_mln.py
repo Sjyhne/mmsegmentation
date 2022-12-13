@@ -2,17 +2,17 @@
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
     type='EncoderDecoder',
-    pretrained='pretrain/jx_vit_base_p16_224-80ecf9dd.pth',
+    pretrained='pretrain/vit_pretrained_contrastive_epoch14.pth',
     backbone=dict(
         type='VisionTransformer',
         img_size=(512, 512),
         patch_size=16,
         in_channels=3,
         embed_dims=768,
-        num_layers=12,
-        num_heads=12,
+        num_layers=8,
+        num_heads=8,
         mlp_ratio=4,
-        out_indices=(2, 5, 8, 11),
+        out_indices=(1, 3, 5, 7),
         qkv_bias=True,
         drop_rate=0.0,
         attn_drop_rate=0.0,

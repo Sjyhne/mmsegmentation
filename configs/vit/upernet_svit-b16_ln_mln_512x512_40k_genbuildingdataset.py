@@ -5,7 +5,7 @@ _base_ = [
 ]
 
 model = dict(
-    pretrained='pretrain/vit_base_patch16_224.pth',
+    pretrained='pretrain/vit_pretrained_contrastive_epoch14.pth',
     backbone=dict(drop_path_rate=0.1, final_norm=True),
     decode_head=dict(num_classes=2),
     auxiliary_head=dict(num_classes=2))
@@ -15,7 +15,7 @@ model = dict(
 optimizer = dict(
     _delete_=True,
     type='AdamW',
-    lr=0.00006,
+    lr=0.0005,
     betas=(0.9, 0.999),
     weight_decay=0.01,
     paramwise_cfg=dict(

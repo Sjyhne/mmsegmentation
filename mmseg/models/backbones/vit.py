@@ -117,7 +117,7 @@ class iAFF(nn.Module):
         xi = x * wei + residual * (1 - wei)
 
         xl2 = self.local_att2(xi)
-        xg2 = self.global_att(xi)
+        xg2 = self.global_att2(xi)
         xlg2 = xl2 + xg2
         wei2 = self.sigmoid(xlg2)
         xo = x * wei2 + residual * (1 - wei2)
@@ -689,7 +689,7 @@ class SiameseVisionTransformer(BaseModule):
         self.affs = ModuleList()
         for i in range(len(out_indices)):
             self.affs.append(
-                AFF(768)
+                iAFF(768)
             )
 
 
@@ -765,7 +765,7 @@ class SiameseVisionTransformer(BaseModule):
 
             load_state_dict(self, state_dict, strict=False, logger=logger)
         elif self.init_cfg is not None:
-            super(VisionTransformer, self).init_weights()
+            super(SiameseVisionTransformer, self).init_weights()
         else:
             # We only implement the 'jax_impl' initialization implemented at
             # https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py#L353  # noqa: E501
